@@ -106,7 +106,7 @@ class login(Resource):
 #@jwt_required()
 class account_balance(Resource):
 #    global users
-    @jwt_required
+    #@jwt_required
     def get(self, phone_number):
         user = User.find_by_phone_number(phone_number)
         if user:
@@ -130,7 +130,7 @@ class Top_up(Resource):
                         required=True,
                         help="This field cannot be left blank!"
                         )
-    @jwt_required
+    #@jwt_required
     def put(self):
         data = Top_up.parser.parse_args()
         user = User.find_by_phone_number(data['phone_number'])
@@ -169,7 +169,7 @@ class transfer(Resource):
                         help="This field cannot be left blank!"
                         )
 
-    @jwt_required
+    #@jwt_required
     def post(self):
         data = transfer.parser.parse_args()
 
