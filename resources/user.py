@@ -195,3 +195,9 @@ class transfer(Resource):
 
 
         return{'message':'either your account or the destination account does not exist'}
+
+class tranfers(Resource):
+    def get(self,phone_number):
+        user = User.find_by_phone_number(phone_number)
+        if user:
+            return jsonify(user.transfer)
