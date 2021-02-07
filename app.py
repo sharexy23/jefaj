@@ -24,6 +24,7 @@ api.add_resource(login, '/login')
 api.add_resource(account_balance, '/balance/<string:phone_number>')
 api.add_resource(Top_up, '/add_money')
 api.add_resource(transfer, '/transfer')
+api.add_resource(transfers, '/transfers/<string:phone_number>')
 if __name__ == '__main__':
     from db import db
     db.init_app(app)
