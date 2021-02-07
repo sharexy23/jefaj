@@ -4,4 +4,3 @@ Flask-JWT
 Flask-JWT-Extended
 Flask-SQLAlchemy
 uwsgi
-© 2021 GitHub, Inc.
