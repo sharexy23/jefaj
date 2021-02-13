@@ -8,10 +8,6 @@ from flask_restful import Resource, reqparse
 from flask_jwt_extended import create_access_token,create_refresh_token,jwt_required
 #from flask_mail import *
 
-def encrypt_string(hash_string):
-    sha_signature = \
-        hashlib.sha256(hash_string.encode()).hexdigest()
-    return sha_signature
 
 class register(Resource):
     parser = reqparse.RequestParser()
@@ -55,6 +51,10 @@ class register(Resource):
                         required=True,
                         help="This field cannot be left blank!"
                         )
+    def encrypt_string(hash_string):
+        sha_signature = \
+            hashlib.sha256(hash_string.encode()).hexdigest()
+        return sha_signature
 
     def post(self):
         data = register.parser.parse_args()
@@ -64,8 +64,11 @@ class register(Resource):
         user = Ujer(data['phone_number'],data['firstname'],data['middlename'],data['lastname'],data['date_of_birth'],
         data['password'],data['email'],data['pin'],'00')
 
-        user.password = encrypt_string(user.password)
-        user.pin = encrypt_string(user.pin)
+        user.password = register.encrypt_string(user.password)
+        #dk = hashlib.pbkdf2_hmac('sha256', b'password', b'salt', 100000)
+        #user.password = user.password
+        #dk.hex(user.password)
+        user.pin = register.encrypt_string(user.pin)
         #user.transfer = list(user.transfer)
         #user.pin = encrypt_string(user.pin)
 
@@ -91,7 +94,7 @@ class login(Resource):
     def post(self):
         data = login.parser.parse_args()
         user = Ujer.find_by_phone_number(data['phone_number']) and Ujer.find_by_password(data['password'])
-        if user is not None:
+        if user:
             access_token = create_access_token(identity=user.id,fresh =True)
             refresh_token= create_refresh_token(user.id)
             return {
@@ -175,11 +178,11 @@ class transfer(Resource):
                         required=True,
                         help="This field cannot be left blank!"
                         )
-    #parser.add_argument('description',
-    #                    type= float,
-    #                    required=True,
-    #                    help="This field cannot be left blank!"
-    #                    )
+    parser.add_argument('description',
+                        type= str,
+                        required=True,
+                        help="This field cannot be left blank!"
+                        )
     parser.add_argument('destination_phone_number',
                         type= str,
                         required=True,
@@ -207,6 +210,8 @@ class transfer(Resource):
         if user is not None and destination is not None:
             user.money_in_the_bag = float(user.money_in_the_bag)
             destination.money_in_the_bag = float(destination.money_in_the_bag)
+            if user.money_in_the_bag < data['ammount']:
+                return {'message':'get a job'}
 
 
             destination.money_in_the_bag = data['ammount'] + destination.money_in_the_bag

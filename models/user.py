@@ -1,7 +1,7 @@
 from db import db
 
 class Ujer(db.Model):
-    __tablename__ = 'user'
+    __tablename__ = 'ujer'
 
     id = db.Column(db.Integer, primary_key=True)
     phone_number = db.Column(db.String(11))
@@ -79,7 +79,7 @@ class Transfer(db.Model):
     source_account = db.Column(db.String(80))
     ammount = db.Column(db.String(80))
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False )
+    user_id = db.Column(db.Integer, db.ForeignKey('ujer.id'), nullable=False )
     #local = db.relationship('Company', foreign_keys=local_id)
     user = db.relationship('Ujer')#,# foreign_keys= user_id)
 
