@@ -1,8 +1,7 @@
-
-
 from db import db
 import hashlib
-from models.user import User
+from models.user import *
+#from models.transfers import Transfer
 from flask import jsonify
 from flask_restful import Resource, reqparse
 #from flask_jwt import jwt_required
@@ -59,20 +58,23 @@ class register(Resource):
 
     def post(self):
         data = register.parser.parse_args()
-        if User.find_by_phone_number(data['phone_number']):
-            return {'message':'user exists already '} ,400
-        user = User(data['phone_number'],data['firstname'],data['middlename'],data['lastname'],data['date_of_birth'],
-        data['password'],data['email'],data['pin'],'00',[])
+        if Ujer.find_by_phone_number(data['phone_number']):
+            return  {'message':'user exists'},400
+
+        user = Ujer(data['phone_number'],data['firstname'],data['middlename'],data['lastname'],data['date_of_birth'],
+        data['password'],data['email'],data['pin'],'00')
+
         user.password = encrypt_string(user.password)
         user.pin = encrypt_string(user.pin)
+        #user.transfer = list(user.transfer)
+        #user.pin = encrypt_string(user.pin)
 
-        User.save_to_db(user)
+        Ujer.save_to_db(user)
         return {
         'status': True,
         'data': user.json(),
         'message':'message'
         },201
-
 
 class login(Resource):
     parser = reqparse.RequestParser()
@@ -86,37 +88,38 @@ class login(Resource):
                         required=True,
                         help="This field cannot be left blank!"
                         )
-
     def post(self):
         data = login.parser.parse_args()
-        user = User.find_by_phone_number(data['phone_number']) and User.find_by_password(data['password'])
+        user = Ujer.find_by_phone_number(data['phone_number']) and Ujer.find_by_password(data['password'])
         if user is not None:
             access_token = create_access_token(identity=user.id,fresh =True)
             refresh_token= create_refresh_token(user.id)
             return {
                   'status': True,
-                  'access_token':access_token,
+                  'access_token': access_token,
                   'message':'you are logged in'
             },200
         return {
+        'status':True,
         'status':False,
         'message':'user not found'
-        }, 404
+        },400
 
-#@jwt_required()
+
 class account_balance(Resource):
 #    global users
-    #@jwt_required
+    #@jwt_required()
     def get(self, phone_number):
-        user = User.find_by_phone_number(phone_number)
+        user = Ujer.find_by_phone_number(phone_number)
         if user:
             return jsonify(user.money_in_the_bag)
+    #    return {'user': 'does not exist'}
         return {
         'status':True,
         'user': 'does not exist'
         },404
 
-#@jwt_required()
+
 class Top_up(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('phone_number',
@@ -124,30 +127,39 @@ class Top_up(Resource):
                         required=True,
                         help="This field cannot be left blank!"
                         )
-
     parser.add_argument('ammount',
                         type= float,
                         required=True,
                         help="This field cannot be left blank!"
                         )
-    #@jwt_required
+
+
+    @jwt_required
     def put(self):
         data = Top_up.parser.parse_args()
-        user = User.find_by_phone_number(data['phone_number'])
-        user.money_in_the_bag = float(user.money_in_the_bag)
+        user = Ujer.find_by_phone_number(data['phone_number'])
+        #user.money_in_the_bag = float(user.money_in_the_bag)
         if user:
+            user.money_in_the_bag = float(user.money_in_the_bag)
             user.money_in_the_bag = data['ammount'] + user.money_in_the_bag
             user.money_in_the_bag =str(user.money_in_the_bag)
-            User.save_to_db(user)
-            #return jsonify(user.money_in_the_bag)
-            return {'status':True,
-            'message':'your sharexy bank account has been credited'
-            },200
+            Ujer.save_to_db(user)
+            return jsonify(user.money_in_the_bag)
         return{'message':'wo geddifok'}
 
-#@jwt_required()
+
 class transfer(Resource):
     parser = reqparse.RequestParser()
+    parser.add_argument('source_name',
+                        type=str,
+                        required=True,
+                        help="This field cannot be left blank!"
+                        )
+    parser.add_argument('destination_name',
+                        type=str,
+                        required=True,
+                        help="This field cannot be left blank!"
+                        )
     parser.add_argument('phone_number',
                         type=str,
                         required=True,
@@ -163,41 +175,66 @@ class transfer(Resource):
                         required=True,
                         help="This field cannot be left blank!"
                         )
+    #parser.add_argument('description',
+    #                    type= float,
+    #                    required=True,
+    #                    help="This field cannot be left blank!"
+    #                    )
     parser.add_argument('destination_phone_number',
                         type= str,
                         required=True,
                         help="This field cannot be left blank!"
+                        )
+    parser.add_argument('user_id',
+                        type= int,
+                        required=True,
+                        help="every transfer needs a user"
                         )
 
     #@jwt_required
     def post(self):
         data = transfer.parser.parse_args()
 
-        user = User.find_by_phone_number(data['phone_number']) and User.find_by_pin(data['pin'])
-        destination = User.find_by_phone_number(data['destination_phone_number'])
+        user = Ujer.find_by_phone_number(data['phone_number'])
+        #user = User.find_by_pin(data['pin'])
+        destination = Ujer.find_by_phone_number(data['destination_phone_number'])
+
+        #user.money_in_the_bag = float(user.money_in_the_bag)
+        #destination.money_in_the_bag = float(destination.money_in_the_bag)
 
 
-        user.money_in_the_bag = float(user.money_in_the_bag)
-        if destination:
-            destination.money_in_the_bag = float(destination.money_in_the_bag)
 
         if user is not None and destination is not None:
+            user.money_in_the_bag = float(user.money_in_the_bag)
+            destination.money_in_the_bag = float(destination.money_in_the_bag)
+
+
             destination.money_in_the_bag = data['ammount'] + destination.money_in_the_bag
             user.money_in_the_bag = data['ammount'] - user.money_in_the_bag
-            user.money_in_the_bag =str(user.money_in_the_bag)
-            destination.money_in_the_bag =str(destination.money_in_the_bag)
-            transaction = {'ss':'hdhd'}
-            user.transfer = list(user.transfer)
-            user.transfer.append(transaction)
+            user.money_in_the_bag = str(user.money_in_the_bag)
+            destination.money_in_the_bag = str(destination.money_in_the_bag)
+            transferg = Transfer(data['source_name'],data['destination_name'],"a money transfer",data['destination_phone_number'],data['phone_number'],data['ammount'],data['user_id'])
+            Transfer.save_to_db(transferg)
+            Ujer.save_to_db(user)
+            #user.transfers = user.transfers + ('j')
+            return {'message':'money don comot for your account'}
+        return {'message':'dh'}
 
-            User.save_to_db(user)
-            return {'message':'money don commot for your account'}
 
 
-        return{'message':'either your account or the destination account does not exist'}
+class TransferHistory(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('phone_number',
+                        type=str,
+                        required=True,
+                        help="This field cannot be left blank!"
+                        )
 
-class transfers(Resource):
-    def get(self,phone_number):
-        user = User.find_by_phone_number(phone_number)
+    #it seems to me that this function is cur
+
+    def post(self):
+        data = TransferHistory.parser.parse_args()
+        user = Ujer.find_by_phone_number(data['phone_number'])
         if user:
-            return jsonify(user.transfer)
+            return user.json()
+        return {'message':'money done commot for your account'}

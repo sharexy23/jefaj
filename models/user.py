@@ -1,7 +1,7 @@
 from db import db
 
-class User(db.Model):
-    __TableName__ = 'users'
+class Ujer(db.Model):
+    __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
     phone_number = db.Column(db.String(11))
@@ -10,13 +10,15 @@ class User(db.Model):
     lastname = db.Column(db.String(80))
     date_of_birth = db.Column(db.String(60))
     password = db.Column(db.String(80))
+    money_in_the_bag = db.Column(db.String(800000000))
     email = db.Column(db.String(80))
     pin = db.Column(db.String(4))
-    money_in_the_bag = db.Column(db.String)
-    transfer = db.column(db.String)
-    #verification_code = db.Column(db.String(80))
 
-    def __init__(self, phone_number, firstname,middlename,lastname,date_of_birth, password,email,pin, money_in_the_bag,transfer):
+    transfers = db.relationship('Transfer', lazy='dynamic',backref='parent')
+
+
+
+    def __init__(self, phone_number, firstname,middlename,lastname,date_of_birth, password,email,pin, money_in_the_bag):
         #self.id = _id
         self.phone_number = phone_number
         self.firstname = firstname
@@ -27,7 +29,10 @@ class User(db.Model):
         self.email = email
         self.pin = pin
         self.money_in_the_bag = money_in_the_bag
-        self.transfer = transfer
+
+
+
+
         #self.verification_code = verification_code
 
     def save_to_db(self):
@@ -39,11 +44,15 @@ class User(db.Model):
         db.session.commit()
 
     def json(self):
-        return {'phone_number':self.phone_number,'firstname':self.firstname,'middlename':self.middlename,'lastname':self.lastname,'date_of_birth':self.date_of_birth,'password':self.password,'email':self.email,'pin':self.pin}
+        return {'phone_number':self.phone_number,'firstname':self.firstname,'middlename':self.middlename,'lastname':self.lastname,'date_of_birth':self.date_of_birth,'password':self.password,'email':self.email,'pin':self.pin,'money_in_the_bag':self.money_in_the_bag,'transfers':[transfer.json() for transfer in self.transfers.all()]}
 
     @classmethod
     def find_by_password(cls, password):
         return cls.query.filter_by(password=password).first()
+
+    @classmethod
+    def find_by_passwordandpin(cls, phone_number,pin):
+        return cls.query.filter_by(phone_number=phone_number ,pin=pin).first()
 
     @classmethod
     def find_by_phone_number(cls, phone_number):
@@ -56,3 +65,46 @@ class User(db.Model):
     @classmethod
     def find_by_pin(cls, pin):
         return cls.query.filter_by(pin=pin).first()
+
+
+
+class Transfer(db.Model):
+    __TableName__ = 'transfers'
+
+    id = db.Column(db.Integer, primary_key=True)
+    source_name = db.Column(db.String(90000000))
+    destination_name = db.Column(db.String(80000))
+    description = db.Column(db.String(90000000))
+    destination_account = db.Column(db.String(80000))
+    source_account = db.Column(db.String(80))
+    ammount = db.Column(db.String(80))
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False )
+    #local = db.relationship('Company', foreign_keys=local_id)
+    user = db.relationship('Ujer')#,# foreign_keys= user_id)
+
+
+    def __init__(self,source_name,destination_name,description,destination_account,source_account,ammount,user_id):
+        #self.id = _id
+        self.source_name = source_name
+        self.destination_name = destination_name
+        self.description = description
+        self.destination_account = destination_account
+        self.source_account = source_account
+        self.ammount = ammount
+        self.user_id = user_id
+
+
+
+        #self.verification_code = verification_code
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def json(self):
+        return {'source_name':self.source_name,'destination_name':self.destination_name,'description':self.description,'destination_account':self.destination_account,'source_account':self.source_account,'ammount':self.ammount}
