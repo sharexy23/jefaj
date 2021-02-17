@@ -11,6 +11,11 @@ from flask_jwt_extended import create_access_token,create_refresh_token,jwt_requ
 
 class register(Resource):
     parser = reqparse.RequestParser()
+    #parser.add_argument('id',
+    #                    type=int,
+    #                    required=True,
+    #                    help="This field cannot be left blank!"
+    #                    )
     parser.add_argument('phone_number',
                         type=str,
                         required=True,
@@ -64,19 +69,17 @@ class register(Resource):
         user = Ujer(data['phone_number'],data['firstname'],data['middlename'],data['lastname'],data['date_of_birth'],
         data['password'],data['email'],data['pin'],'00')
 
-        user.password = register.encrypt_string(user.password)
-        #dk = hashlib.pbkdf2_hmac('sha256', b'password', b'salt', 100000)
-        #user.password = user.password
-        #dk.hex(user.password)
+        #user.password = register.encrypt_string(user.password)
         user.pin = register.encrypt_string(user.pin)
-        #user.transfer = list(user.transfer)
-        #user.pin = encrypt_string(user.pin)
 
+        #idi = Ujer.query(Ujer).get(user.id)
         Ujer.save_to_db(user)
+        #return jsonify(idi)
         return {
         'status': True,
-        'data': user.json(),
-        'message':'message'
+        'data info': user.jsonyo(),
+        'data':user.json(),
+        'message':'user created succesfully'
         },201
 
 class login(Resource):
@@ -106,7 +109,7 @@ class login(Resource):
         'status':True,
         'status':False,
         'message':'user not found'
-        },400
+        },404
 
 
 class account_balance(Resource):
@@ -114,8 +117,13 @@ class account_balance(Resource):
     #@jwt_required()
     def get(self, phone_number):
         user = Ujer.find_by_phone_number(phone_number)
+        balance = user.account_balance
+        #n =user.phone_number
         if user:
-            return jsonify(user.money_in_the_bag)
+            return {
+            'status':True,
+            'balance':balance
+            }
     #    return {'user': 'does not exist'}
         return {
         'status':True,
@@ -143,12 +151,19 @@ class Top_up(Resource):
         user = Ujer.find_by_phone_number(data['phone_number'])
         #user.money_in_the_bag = float(user.money_in_the_bag)
         if user:
-            user.money_in_the_bag = float(user.money_in_the_bag)
-            user.money_in_the_bag = data['ammount'] + user.money_in_the_bag
-            user.money_in_the_bag =str(user.money_in_the_bag)
+            user.account_balance = float(user.account_balance)
+            user.account_balance = data['ammount'] + user.account_balance
+            user.account_balance =str(user.account_balance)
             Ujer.save_to_db(user)
-            return jsonify(user.money_in_the_bag)
-        return{'message':'wo geddifok'}
+            json = user.account_balance
+            return{
+            'status':True,
+            'account_balance':json
+            }
+        return{
+        'status': False,
+        'message':'user does not exist'
+        }
 
 
 class transfer(Resource):
@@ -173,7 +188,7 @@ class transfer(Resource):
                         required=True,
                         help="This field cannot be left blank!"
                         )
-    parser.add_argument('ammount',
+    parser.add_argument('amount',
                         type= float,
                         required=True,
                         help="This field cannot be left blank!"
@@ -208,22 +223,27 @@ class transfer(Resource):
 
 
         if user is not None and destination is not None:
-            user.money_in_the_bag = float(user.money_in_the_bag)
-            destination.money_in_the_bag = float(destination.money_in_the_bag)
-            if user.money_in_the_bag < data['ammount']:
-                return {'message':'get a job'}
+            user.account_balance = float(user.account_balance)
+            destination.account_balance = float(destination.account_balance)
+            if user.account_balance < data['amount']:
+                return {'message':'your account balance is less than required amount'}
 
 
-            destination.money_in_the_bag = data['ammount'] + destination.money_in_the_bag
-            user.money_in_the_bag = data['ammount'] - user.money_in_the_bag
-            user.money_in_the_bag = str(user.money_in_the_bag)
-            destination.money_in_the_bag = str(destination.money_in_the_bag)
-            transferg = Transfer(data['source_name'],data['destination_name'],"a money transfer",data['destination_phone_number'],data['phone_number'],data['ammount'],data['user_id'])
+            destination.account_balance = data['amount'] + destination.account_balance
+            user.account_balance = user.account_balance - data['amount']
+            user.account_balance = str(user.account_balance)
+            destination.account_balance = str(destination.account_balance)
+            transferg = Transfer(data['source_name'],data['destination_name'],data['description'],data['destination_phone_number'],data['phone_number'],data['amount'],data['user_id'])
             Transfer.save_to_db(transferg)
             Ujer.save_to_db(user)
             #user.transfers = user.transfers + ('j')
-            return {'message':'money don comot for your account'}
-        return {'message':'dh'}
+            acc =user.account_balance
+            return {
+                          'status':True,
+                         # 'data': jsonify(acc),
+                          'message':'you have succesfully made your transfer'
+            }
+        return {'message':'either your account or the destination account doesnt exist'}
 
 
 
@@ -241,5 +261,5 @@ class TransferHistory(Resource):
         data = TransferHistory.parser.parse_args()
         user = Ujer.find_by_phone_number(data['phone_number'])
         if user:
-            return user.json()
-        return {'message':'money done commot for your account'}
+            return user.jsony()
+        return {'message':'user not found'},404

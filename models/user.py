@@ -10,7 +10,7 @@ class Ujer(db.Model):
     lastname = db.Column(db.String(80))
     date_of_birth = db.Column(db.String(60))
     password = db.Column(db.String(80))
-    money_in_the_bag = db.Column(db.String(800000000))
+    account_balance = db.Column(db.String(800000000))
     email = db.Column(db.String(80))
     pin = db.Column(db.String(4))
 
@@ -18,8 +18,7 @@ class Ujer(db.Model):
 
 
 
-    def __init__(self, phone_number, firstname,middlename,lastname,date_of_birth, password,email,pin, money_in_the_bag):
-        #self.id = _id
+    def __init__(self, phone_number, firstname,middlename,lastname,date_of_birth, password,email,pin, account_balance):
         self.phone_number = phone_number
         self.firstname = firstname
         self.middlename = middlename
@@ -28,7 +27,7 @@ class Ujer(db.Model):
         self.password = password
         self.email = email
         self.pin = pin
-        self.money_in_the_bag = money_in_the_bag
+        self.account_balance = account_balance
 
 
 
@@ -44,7 +43,11 @@ class Ujer(db.Model):
         db.session.commit()
 
     def json(self):
-        return {'phone_number':self.phone_number,'firstname':self.firstname,'middlename':self.middlename,'lastname':self.lastname,'date_of_birth':self.date_of_birth,'password':self.password,'email':self.email,'pin':self.pin,'money_in_the_bag':self.money_in_the_bag,'transfers':[transfer.json() for transfer in self.transfers.all()]}
+        return {'phone_number':self.phone_number,'firstname':self.firstname,'middlename':self.middlename,'lastname':self.lastname,'date_of_birth':self.date_of_birth,'email':self.email}
+    def jsony(self):
+        return {'transfers':[transfer.json() for transfer in self.transfers.all()]}
+    def jsonyo(self):
+        return {'id':self.id}
 
     @classmethod
     def find_by_password(cls, password):
@@ -60,7 +63,7 @@ class Ujer(db.Model):
 
     @classmethod
     def find_by_id(cls, _id):
-        return cls.query.filter_by(id=_id).first()
+        return cls.query.user.id.first()
 
     @classmethod
     def find_by_pin(cls, pin):
