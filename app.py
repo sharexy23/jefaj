@@ -4,7 +4,7 @@ from flask_restful import Api,Resource, reqparse
 from resources.user import *
 from db import db
 from flask_jwt_extended import JWTManager
-
+from jwt.algorithms import requires_cryptography
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///data.db')
