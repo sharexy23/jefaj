@@ -5,7 +5,7 @@ from models.user import *
 from flask import jsonify
 from flask_restful import Resource, reqparse
 #from flask_jwt import jwt_required
-from flask_jwt_extended import create_access_token,create_refresh_token,jwt_required
+from flask_jwt_extended import create_access_token,jwt_required
 #from flask_mail import *
 from jwt.algorithms import requires_cryptography
 
@@ -99,7 +99,7 @@ class login(Resource):
         user = Ujer.find_by_phone_number(data['phone_number']) and Ujer.find_by_password(data['password'])
         if user:
             access_token = create_access_token(identity=user.id,fresh =True)
-            refresh_token= create_refresh_token(user.id)
+            #refresh_token= create_refresh_token(user.id)
             return {
                   'status': True,
                   'access_token': access_token,
