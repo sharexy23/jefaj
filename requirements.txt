@@ -5,4 +5,4 @@ Flask-JWT-Extended
 Flask-SQLAlchemy
 uwsgi
 psycopg2
-Requires_Cryptography
+Requires-Cryptography
